@@ -57,22 +57,25 @@ JWT_SECRET=your_secret_key
 
 ## 🧡 API Endpoints
 
-| **Method** | **Endpoint**                   | **Description**                       | **Access Level**        |
-| ---------- | ------------------------------ | ------------------------------------- | ----------------------- |
-| `POST`     | `/users/students/login`        | Login for students, returns JWT token | Public                  |
-| `POST`     | `/users/admins/login`          | Login for admins, returns JWT token   | Public                  |
-| `POST`     | `/complaints`                  | Create a new complaint                | Student (Authenticated) |
-| `GET`      | `/complaints`                  | List all complaints                   | Student (Authenticated) |
-| `GET`      | `/complaints/matric/:matricNo` | List all complaints by matric number  | Student (Authenticated) |
-| `PUT`      | `/complaints/:id`              | Update complaint status and comment   | Admin (Authenticated)   |
-| `POST`     | `/faqs`                        | Create a new FAQ                      | Admin (Authenticated)   |
-| `GET`      | `/faqs`                        | List all FAQs                         | Student (Authenticated) |
-| `PUT`      | `/faqs/:id`                    | Update an FAQ                         | Admin (Authenticated)   |
-| `DELETE`   | `/faqs/:id`                    | Delete an FAQ                         | Admin (Authenticated)   |
-| `GET`      | `/contacts`                    | Get contact details                   | Student (Authenticated) |
-| `PUT`      | `/contacts`                    | Update contact details                | Admin (Authenticated)   |
-| `POST`     | `/feedbacks`                   | Post a feedback                       | Student (Authenticated) |
-| `GET`      | `/feedbacks`                   | Get all feedback                      | Student (Authenticated) |
+| **Method** | **Endpoint**                   | **Description**                        | **Access Level**        |
+| ---------- | ------------------------------ | -------------------------------------- | ----------------------- |
+| `POST`     | `/users/students/login`        | Login for students, returns JWT token  | Public                  |
+| `POST`     | `/users/admins/login`          | Login for admins, returns JWT token    | Public                  |
+| `POST`     | `/complaints`                  | Create a new complaint                 | Student (Authenticated) |
+| `GET`      | `/complaints`                  | List all complaints                    | Student (Authenticated) |
+| `GET`      | `/complaints/matric/:matricNo` | List all complaints by matric number   | Student (Authenticated) |
+| `PUT`      | `/complaints/:id`              | Update complaint status and comment    | Admin (Authenticated)   |
+| `POST`     | `/faqs`                        | Create a new FAQ                       | Admin (Authenticated)   |
+| `GET`      | `/faqs`                        | List all FAQs                          | Student (Authenticated) |
+| `PUT`      | `/faqs/:id`                    | Update an FAQ                          | Admin (Authenticated)   |
+| `DELETE`   | `/faqs/:id`                    | Delete an FAQ                          | Admin (Authenticated)   |
+| `GET`      | `/contacts`                    | Get contact details                    | Student (Authenticated) |
+| `PUT`      | `/contacts`                    | Update contact details                 | Admin (Authenticated)   |
+| `POST`     | `/feedbacks`                   | Post a feedback                        | Student (Authenticated) |
+| `GET`      | `/feedbacks`                   | Get all feedback                       | Student (Authenticated) |
+| `GET`      | `/notifications/:matricNo`     | Get all notifications by matric number | Student (Authenticated) |
+| `PUT`      | `/notifications/:id/read       | Mark notification as read              | Student (Authenticated) |
+| `DELETE`   | `/notifications/:id`           | Delete a notification                  | Student (Authenticated) |
 
 ## 💛 Contributing
 
