@@ -1,7 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 export interface IComplaint extends Document {
 	complaintId: string;
+	title: string;
+	name: string;
+	matricNo: string;
 	submittedBy: string;
 	roomNumber: string;
 	category: string;
@@ -14,7 +18,10 @@ export interface IComplaint extends Document {
 }
 
 const ComplaintSchema: Schema = new Schema({
-	complaintId: { type: String, required: true, unique: true },
+	complaintId: { type: String, default: uuidv4 },
+	title: { type: String, required: true },
+	name: { type: String, required: true },
+	matricNo: { type: String, required: true },
 	submittedBy: { type: String, required: true },
 	roomNumber: { type: String, required: true },
 	category: { type: String, required: true },

@@ -6,6 +6,11 @@ const router = Router();
 
 router.post("/", authenticateToken, ComplaintController.createComplaint);
 router.get("/", authenticateToken, ComplaintController.listComplaints);
+router.get(
+	"/matric/:matricNo",
+	authenticateToken,
+	ComplaintController.getComplaintsByMatricNo
+);
 router.put(
 	"/:id",
 	authenticateToken,

@@ -16,7 +16,9 @@ export class ComplaintController {
 	static async createComplaint(req: Request, res: Response): Promise<void> {
 		try {
 			const {
-				complaintId,
+				title,
+				name,
+				matricNo,
 				roomNumber,
 				category,
 				description,
@@ -34,8 +36,10 @@ export class ComplaintController {
 			}
 
 			const complaint = new ComplaintModel({
-				complaintId,
-				submittedBy, // Automatically assign from the token
+				title,
+				name,
+				matricNo,
+				submittedBy,
 				roomNumber,
 				category,
 				description,
@@ -78,6 +82,31 @@ export class ComplaintController {
 				.json({ message: "Complaint updated successfully!", complaint });
 		} catch (error: any) {
 			console.error("Error updating complaint:", error);
+			res
+				.status(500)
+				.json({ message: "Internal server error", error: error.message });
+		}
+	}
+
+	static async getComplaintsByMatricNo(
+		req: Request,
+		res: Response
+	): Promise<void> {
+		const { matricNo } = req.params; // Get matricNo from route parameters
+
+		try {
+			const complaints = await ComplaintModel.find({ matricNo });
+
+			if (complaints.length === 0) {
+				res
+					.status(404)
+					.json({ message: `No complaints found for matricNo: ${matricNo}` });
+				return;
+			}
+
+			res.status(200).json(complaints);
+		} catch (error: any) {
+			console.error("Error fetching complaints:", error);
 			res
 				.status(500)
 				.json({ message: "Internal server error", error: error.message });
