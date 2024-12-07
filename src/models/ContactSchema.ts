@@ -5,6 +5,7 @@ export interface IContact extends Document {
 	address: string;
 	phone: string;
 	email: string;
+	fax: string;
 }
 
 // Define the Contact model interface with custom static methods
@@ -17,6 +18,7 @@ const ContactSchema: Schema<IContact> = new Schema({
 	address: { type: String, required: true },
 	phone: { type: String, required: true },
 	email: { type: String, required: true },
+	fax: { type: String, required: true },
 });
 
 // Add a static method to retrieve the single contact document

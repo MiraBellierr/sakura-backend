@@ -24,7 +24,7 @@ export class ContactController {
 	// Update the existing contact (only one contact in DB)
 	static async updateContact(req: Request, res: Response): Promise<void> {
 		try {
-			const { address, phone, email } = req.body;
+			const { address, phone, email, fax } = req.body;
 
 			// Retrieve the existing contact (only one should exist)
 			let contact = await ContactModel.getContact();
@@ -38,6 +38,7 @@ export class ContactController {
 			contact.address = address;
 			contact.phone = phone;
 			contact.email = email;
+			contact.fax = fax;
 
 			// Save the updated contact
 			await contact.save();
