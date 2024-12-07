@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 export interface IFaq extends Document {
 	faqId: string;
@@ -7,7 +8,7 @@ export interface IFaq extends Document {
 }
 
 const FaqSchema: Schema = new Schema({
-	faqId: { type: String, required: true, unique: true },
+	faqId: { type: String, default: uuidv4 },
 	question: { type: String, required: true },
 	answer: { type: String, required: true },
 });
