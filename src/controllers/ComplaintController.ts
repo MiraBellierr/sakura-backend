@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { ComplaintModel } from "../models/ComplaintSchema";
+import { NotificationModel } from "../models/NotificationSchema";
+import { sendNotification } from "../app";
 
 export class ComplaintController {
 	static async listComplaints(req: Request, res: Response): Promise<void> {
@@ -76,6 +78,20 @@ export class ComplaintController {
 				res.status(404).json({ message: "Complaint not found!" });
 				return;
 			}
+
+			const notification = await NotificationModel.create({
+				userId: complaint.submittedBy,
+				message: `Your complaint has been updated to "${status}".`,
+				type: "complaint_update",
+				data: { complaintId: complaint.complaintId },
+			});
+
+			// Emit real-time notification to the user
+			sendNotification(complaint.submittedBy, {
+				message: notification.message,
+				type: notification.type,
+				data: notification.data,
+			});
 
 			res
 				.status(200)

@@ -7,7 +7,9 @@ import complaintRoutes from "./routes/ComplaintRoutes";
 import feedbackRoutes from "./routes/FeedbackRoutes";
 import contactRoutes from "./routes/ContactRoutes";
 import faqRoutes from "./routes/FaqRoutes";
-import { excludeAuth } from "./utils/excludeAuth";
+import notificationRoutes from "./routes/NotificationRoutes";
+import { Server } from "socket.io";
+import http from "http";
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -22,8 +24,33 @@ app.use("/complaints", complaintRoutes);
 app.use("/feedbacks", feedbackRoutes);
 app.use("/contacts", contactRoutes);
 app.use("/faqs", faqRoutes);
+app.use("/notifications", notificationRoutes);
 
-// Connect to Database and Start Server
+const server = http.createServer(app);
+const io = new Server(server, {
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST", "PUT", "DELETE"],
+	},
+});
+
+io.on("connection", (socket) => {
+	console.log(`User connected: ${socket.id}`);
+
+	socket.on("join", (userId) => {
+		console.log(`User joined room: ${userId}`);
+		socket.join(userId);
+	});
+
+	socket.on("disconnect", () => {
+		console.log(`User disconnected: ${socket.id}`);
+	});
+});
+
+export const sendNotification = (userId: string, notification: object) => {
+	io.to(userId).emit("notification", notification);
+};
+
 connectDatabase().then(() => {
 	app.listen(PORT, () =>
 		console.log(`Server running on http://localhost:${PORT}`)
