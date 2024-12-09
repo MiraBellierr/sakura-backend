@@ -64,6 +64,7 @@ JWT_SECRET=your_secret_key
 | `POST`     | `/complaints`                  | Create a new complaint                 | Student (Authenticated) |
 | `GET`      | `/complaints`                  | List all complaints                    | Student (Authenticated) |
 | `GET`      | `/complaints/matric/:matricNo` | List all complaints by matric number   | Student (Authenticated) |
+| `GET`      | `/complaints/:id               | Get complaint by id                    | Student (Authenticated) |
 | `PUT`      | `/complaints/:id`              | Update complaint status and comment    | Admin (Authenticated)   |
 | `POST`     | `/faqs`                        | Create a new FAQ                       | Admin (Authenticated)   |
 | `GET`      | `/faqs`                        | List all FAQs                          | Student (Authenticated) |
