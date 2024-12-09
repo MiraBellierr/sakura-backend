@@ -11,6 +11,7 @@ router.get(
 	authenticateToken,
 	ComplaintController.getComplaintsByMatricNo
 );
+router.get("/:id", authenticateToken, ComplaintController.getComplaintsById);
 router.put(
 	"/:id",
 	authenticateToken,

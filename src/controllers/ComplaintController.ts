@@ -128,4 +128,26 @@ export class ComplaintController {
 				.json({ message: "Internal server error", error: error.message });
 		}
 	}
+
+	static async getComplaintsById(req: Request, res: Response): Promise<void> {
+		const { id } = req.params;
+
+		try {
+			const complaints = await ComplaintModel.find({ complaintId: id });
+
+			if (complaints.length === 0) {
+				res.status(404).json({
+					message: `No complaints found for complaintId: ${id}`,
+				});
+				return;
+			}
+
+			res.status(200).json(complaints);
+		} catch (error: any) {
+			console.error("Error fetching complaints:", error);
+			res
+				.status(500)
+				.json({ message: "Internal server error", error: error.message });
+		}
+	}
 }
