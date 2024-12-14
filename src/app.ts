@@ -10,6 +10,9 @@ import faqRoutes from "./routes/FaqRoutes";
 import notificationRoutes from "./routes/NotificationRoutes";
 import { Server } from "socket.io";
 import http from "http";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
