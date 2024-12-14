@@ -1,7 +1,8 @@
+// app.ts
 import express, { Application } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import { connectDatabase } from "./utils/Database";
+import { initializeFirebase } from "./utils/firebaseConfig";
 import userRoutes from "./routes/UserRoutes";
 import complaintRoutes from "./routes/ComplaintRoutes";
 import feedbackRoutes from "./routes/FeedbackRoutes";
@@ -54,7 +55,7 @@ export const sendNotification = (userId: string, notification: object) => {
 	io.to(userId).emit("notification", notification);
 };
 
-connectDatabase().then(() => {
+initializeFirebase().then(() => {
 	app.listen(PORT, () =>
 		console.log(`Server running on http://localhost:${PORT}`)
 	);

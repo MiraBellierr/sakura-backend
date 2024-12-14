@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { NotificationModel } from "../models/NotificationSchema";
+import admin from "firebase-admin";
 
 export class NotificationController {
 	// Fetch all notifications for a specific user
@@ -7,11 +7,20 @@ export class NotificationController {
 		const { userId } = req.params;
 
 		try {
-			const notifications = await NotificationModel.find({ userId }).sort({
-				timestamp: -1,
-			});
+			const snapshot = await admin
+				.database()
+				.ref("notifications")
+				.orderByChild("userId")
+				.equalTo(userId)
+				.once("value");
 
-			if (!notifications || notifications.length === 0) {
+			const notifications = snapshot.val()
+				? Object.values(snapshot.val()).sort(
+						(a: any, b: any) => b.timestamp - a.timestamp
+				  )
+				: [];
+
+			if (notifications.length === 0) {
 				res.status(404).json({ message: "No notifications found." });
 				return;
 			}
@@ -30,20 +39,26 @@ export class NotificationController {
 		const { id } = req.params;
 
 		try {
-			const notification = await NotificationModel.findByIdAndUpdate(
-				id,
-				{ isRead: true },
-				{ new: true } // Return the updated document
-			);
+			const notificationRef = admin.database().ref(`notifications/${id}`);
+			const snapshot = await notificationRef.once("value");
 
-			if (!notification) {
+			if (!snapshot.exists()) {
 				res.status(404).json({ message: "Notification not found." });
 				return;
 			}
 
-			res
-				.status(200)
-				.json({ message: "Notification marked as read.", notification });
+			const updatedData = {
+				isRead: true,
+				updatedDate: new Date().toISOString(),
+			};
+			await notificationRef.update(updatedData);
+
+			const updatedNotification = { ...snapshot.val(), ...updatedData };
+
+			res.status(200).json({
+				message: "Notification marked as read.",
+				notification: updatedNotification,
+			});
 		} catch (error: any) {
 			console.error("Error marking notification as read:", error);
 			res
@@ -57,12 +72,15 @@ export class NotificationController {
 		const { id } = req.params;
 
 		try {
-			const notification = await NotificationModel.findByIdAndDelete(id);
+			const notificationRef = admin.database().ref(`notifications/${id}`);
+			const snapshot = await notificationRef.once("value");
 
-			if (!notification) {
+			if (!snapshot.exists()) {
 				res.status(404).json({ message: "Notification not found." });
 				return;
 			}
+
+			await notificationRef.remove();
 
 			res.status(200).json({ message: "Notification deleted successfully." });
 		} catch (error: any) {
@@ -78,14 +96,33 @@ export class NotificationController {
 		const { userId } = req.params;
 
 		try {
-			const result = await NotificationModel.updateMany(
-				{ userId, isRead: false },
-				{ isRead: true }
-			);
+			const snapshot = await admin
+				.database()
+				.ref("notifications")
+				.orderByChild("userId")
+				.equalTo(userId)
+				.once("value");
 
-			res
-				.status(200)
-				.json({ message: "All notifications marked as read.", result });
+			if (!snapshot.exists()) {
+				res
+					.status(404)
+					.json({ message: "No notifications found for the user." });
+				return;
+			}
+
+			// Explicitly typing the updates object
+			const updates: { [key: string]: any } = {};
+
+			snapshot.forEach((childSnapshot) => {
+				const notificationId = childSnapshot.key;
+				updates[`notifications/${notificationId}/isRead`] = true;
+				updates[`notifications/${notificationId}/updatedDate`] =
+					new Date().toISOString();
+			});
+
+			await admin.database().ref().update(updates);
+
+			res.status(200).json({ message: "All notifications marked as read." });
 		} catch (error: any) {
 			console.error("Error marking all notifications as read:", error);
 			res
@@ -102,11 +139,31 @@ export class NotificationController {
 		const { userId } = req.params;
 
 		try {
-			const result = await NotificationModel.deleteMany({ userId });
+			const snapshot = await admin
+				.database()
+				.ref("notifications")
+				.orderByChild("userId")
+				.equalTo(userId)
+				.once("value");
+
+			if (!snapshot.exists()) {
+				res
+					.status(404)
+					.json({ message: "No notifications found for the user." });
+				return;
+			}
+
+			const updates: { [key: string]: any } = {};
+			snapshot.forEach((childSnapshot) => {
+				const notificationId = childSnapshot.key;
+				updates[`notifications/${notificationId}`] = null;
+			});
+
+			await admin.database().ref().update(updates);
 
 			res
 				.status(200)
-				.json({ message: "All notifications deleted successfully.", result });
+				.json({ message: "All notifications deleted successfully." });
 		} catch (error: any) {
 			console.error("Error deleting all notifications:", error);
 			res

@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import { ComplaintModel } from "../models/ComplaintSchema";
-import { NotificationModel } from "../models/NotificationSchema";
+import admin from "firebase-admin";
 import { sendNotification } from "../app";
 
 export class ComplaintController {
 	static async listComplaints(req: Request, res: Response): Promise<void> {
 		try {
-			const complaints = await ComplaintModel.find(); // Fetch all complaints from the database
+			const snapshot = await admin.database().ref("complaints").once("value");
+			const complaints = snapshot.val() ? Object.values(snapshot.val()) : [];
 			res.status(200).json(complaints);
 		} catch (error: any) {
 			console.error("Error fetching complaints:", error);
@@ -15,6 +15,7 @@ export class ComplaintController {
 				.json({ message: "Internal server error", error: error.message });
 		}
 	}
+
 	static async createComplaint(req: Request, res: Response): Promise<void> {
 		try {
 			const {
@@ -28,7 +29,6 @@ export class ComplaintController {
 				comment,
 			} = req.body;
 
-			// Ensure the user is authenticated and use their userId
 			const submittedBy = req.user?.userId;
 			if (!submittedBy) {
 				res.status(403).json({
@@ -37,7 +37,9 @@ export class ComplaintController {
 				return;
 			}
 
-			const complaint = new ComplaintModel({
+			const newComplaintRef = admin.database().ref("complaints").push();
+			const complaint = {
+				id: newComplaintRef.key,
 				title,
 				name,
 				matricNo,
@@ -46,10 +48,13 @@ export class ComplaintController {
 				category,
 				description,
 				priority,
-				comment,
-			});
+				comment: null,
+				status: "Pending",
+				createdDate: new Date().toISOString(),
+				updatedDate: new Date().toISOString(),
+			};
 
-			await complaint.save();
+			await newComplaintRef.set(complaint);
 
 			res
 				.status(201)
@@ -63,30 +68,38 @@ export class ComplaintController {
 	}
 
 	static async updateComplaint(req: Request, res: Response): Promise<void> {
-		const { id } = req.params; // Complaint ID from route parameters
+		const { id } = req.params;
 		const { status, comment } = req.body;
 
 		try {
-			// Find the complaint and update
-			const complaint = await ComplaintModel.findOneAndUpdate(
-				{ complaintId: id },
-				{ status, comment, updatedDate: new Date() }, // Explicitly set updatedDate
-				{ new: true } // Return the updated document
-			);
+			const complaintRef = admin.database().ref(`complaints/${id}`);
+			const snapshot = await complaintRef.once("value");
 
-			if (!complaint) {
+			if (!snapshot.exists()) {
 				res.status(404).json({ message: "Complaint not found!" });
 				return;
 			}
 
-			const notification = await NotificationModel.create({
-				userId: complaint.submittedBy,
-				message: `Your complaint has been updated to "${status}".`,
-				type: "complaint_update",
-				data: { complaintId: complaint.complaintId },
-			});
+			const updatedData = {
+				status,
+				comment,
+				updatedDate: new Date().toISOString(),
+			};
 
-			// Emit real-time notification to the user
+			await complaintRef.update(updatedData);
+
+			const complaint = { ...snapshot.val(), ...updatedData };
+
+			const notification = {
+				userId: complaint.submittedBy,
+				message: `Your complaint has been updated to \"${status}\".`,
+				type: "complaint_update",
+				data: { complaintId: id },
+				createdDate: new Date().toISOString(),
+			};
+
+			await admin.database().ref("notifications").push(notification);
+
 			sendNotification(complaint.submittedBy, {
 				message: notification.message,
 				type: notification.type,
@@ -108,10 +121,16 @@ export class ComplaintController {
 		req: Request,
 		res: Response
 	): Promise<void> {
-		const { matricNo } = req.params; // Get matricNo from route parameters
+		const { matricNo } = req.params;
 
 		try {
-			const complaints = await ComplaintModel.find({ matricNo });
+			const snapshot = await admin
+				.database()
+				.ref("complaints")
+				.orderByChild("matricNo")
+				.equalTo(matricNo)
+				.once("value");
+			const complaints = snapshot.val() ? Object.values(snapshot.val()) : [];
 
 			if (complaints.length === 0) {
 				res
@@ -133,16 +152,19 @@ export class ComplaintController {
 		const { id } = req.params;
 
 		try {
-			const complaints = await ComplaintModel.find({ complaintId: id });
+			const snapshot = await admin
+				.database()
+				.ref(`complaints/${id}`)
+				.once("value");
 
-			if (complaints.length === 0) {
-				res.status(404).json({
-					message: `No complaints found for complaintId: ${id}`,
-				});
+			if (!snapshot.exists()) {
+				res
+					.status(404)
+					.json({ message: `No complaints found for complaintId: ${id}` });
 				return;
 			}
 
-			res.status(200).json(complaints);
+			res.status(200).json(snapshot.val());
 		} catch (error: any) {
 			console.error("Error fetching complaints:", error);
 			res

@@ -1,7 +1,14 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { UserModel } from "../models/UserSchema";
+import admin from "firebase-admin";
+
+// Define the type for a user
+interface User {
+	userId: string;
+	password: string;
+	role: string;
+}
 
 export class UserController {
 	// Student Login
@@ -9,9 +16,23 @@ export class UserController {
 		const { userId, password } = req.body;
 
 		try {
-			// Find the student in the database
-			const student = await UserModel.findOne({ userId, role: "student" });
-			if (!student) {
+			// Find the student in Firebase database
+			const snapshot = await admin
+				.database()
+				.ref("users")
+				.orderByChild("userId")
+				.equalTo(userId)
+				.once("value");
+
+			const students = snapshot.val();
+			if (!students) {
+				res.status(404).json({ message: "Student not found!" });
+				return;
+			}
+
+			// Cast the retrieved data to the User type
+			const student = Object.values(students)[0] as User;
+			if (student.role !== "student") {
 				res.status(404).json({ message: "Student not found!" });
 				return;
 			}
@@ -42,15 +63,29 @@ export class UserController {
 		const { userId, password } = req.body;
 
 		try {
-			// Find the admin in the database
-			const admin = await UserModel.findOne({ userId, role: "admin" });
-			if (!admin) {
+			// Find the admin in Firebase database
+			const snapshot = await admin
+				.database()
+				.ref("users")
+				.orderByChild("userId")
+				.equalTo(userId)
+				.once("value");
+
+			const admins = snapshot.val();
+			if (!admins) {
+				res.status(404).json({ message: "Admin not found!" });
+				return;
+			}
+
+			// Cast the retrieved data to the User type
+			const adminUser = Object.values(admins)[0] as User;
+			if (adminUser.role !== "admin") {
 				res.status(404).json({ message: "Admin not found!" });
 				return;
 			}
 
 			// Compare passwords
-			const passwordMatch = await bcrypt.compare(password, admin.password);
+			const passwordMatch = await bcrypt.compare(password, adminUser.password);
 			if (!passwordMatch) {
 				res.status(401).json({ message: "Invalid credentials!" });
 				return;
@@ -58,7 +93,7 @@ export class UserController {
 
 			// Generate JWT
 			const token = jwt.sign(
-				{ userId: admin.userId, role: admin.role },
+				{ userId: adminUser.userId, role: adminUser.role },
 				process.env.JWT_SECRET || "secret",
 				{ expiresIn: "1h" }
 			);

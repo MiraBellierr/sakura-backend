@@ -1,14 +1,21 @@
 import { Request, Response } from "express";
-import { FaqModel } from "../models/FaqSchema";
+import admin from "firebase-admin";
 
 export class FaqController {
 	// Create a new FAQ
 	static async createFaq(req: Request, res: Response): Promise<void> {
 		try {
-			const { faqId, question, answer } = req.body;
+			const { question, answer } = req.body;
 
-			const faq = new FaqModel({ faqId, question, answer });
-			await faq.save();
+			const newFaqRef = admin.database().ref("faqs").push();
+			const faq = {
+				id: newFaqRef.key,
+				question,
+				answer,
+				createdDate: new Date().toISOString(),
+			};
+
+			await newFaqRef.set(faq);
 
 			res.status(201).json({ message: "FAQ created successfully!", faq });
 		} catch (error: any) {
@@ -22,7 +29,9 @@ export class FaqController {
 	// List all FAQs
 	static async listFaqs(req: Request, res: Response): Promise<void> {
 		try {
-			const faqs = await FaqModel.find();
+			const snapshot = await admin.database().ref("faqs").once("value");
+			const faqs = snapshot.val() ? Object.values(snapshot.val()) : [];
+
 			res.status(200).json(faqs);
 		} catch (error: any) {
 			console.error("Error fetching FAQs:", error);
@@ -38,18 +47,26 @@ export class FaqController {
 		const { question, answer } = req.body;
 
 		try {
-			const faq = await FaqModel.findOneAndUpdate(
-				{ faqId: id },
-				{ question, answer },
-				{ new: true } // Return the updated FAQ
-			);
+			const faqRef = admin.database().ref(`faqs/${id}`);
+			const snapshot = await faqRef.once("value");
 
-			if (!faq) {
+			if (!snapshot.exists()) {
 				res.status(404).json({ message: "FAQ not found!" });
 				return;
 			}
 
-			res.status(200).json({ message: "FAQ updated successfully!", faq });
+			const updatedFaq = {
+				...snapshot.val(),
+				question: question || snapshot.val().question,
+				answer: answer || snapshot.val().answer,
+				updatedDate: new Date().toISOString(),
+			};
+
+			await faqRef.set(updatedFaq);
+
+			res
+				.status(200)
+				.json({ message: "FAQ updated successfully!", faq: updatedFaq });
 		} catch (error: any) {
 			console.error("Error updating FAQ:", error);
 			res
@@ -63,12 +80,15 @@ export class FaqController {
 		const { id } = req.params;
 
 		try {
-			const faq = await FaqModel.findOneAndDelete({ faqId: id });
+			const faqRef = admin.database().ref(`faqs/${id}`);
+			const snapshot = await faqRef.once("value");
 
-			if (!faq) {
+			if (!snapshot.exists()) {
 				res.status(404).json({ message: "FAQ not found!" });
 				return;
 			}
+
+			await faqRef.remove();
 
 			res.status(200).json({ message: "FAQ deleted successfully!" });
 		} catch (error: any) {

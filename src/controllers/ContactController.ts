@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
-import { ContactModel } from "../models/ContactSchema";
+import admin from "firebase-admin";
 
 export class ContactController {
 	// Get the single contact (if it exists)
 	static async getContact(req: Request, res: Response): Promise<void> {
 		try {
-			const contact = await ContactModel.getContact(); // Use the model's static method
+			const snapshot = await admin.database().ref("contact").once("value");
+			const contact = snapshot.val();
 
 			if (!contact) {
 				res.status(404).json({ message: "Contact not found!" });
@@ -26,8 +27,9 @@ export class ContactController {
 		try {
 			const { address, phone, email, fax } = req.body;
 
-			// Retrieve the existing contact (only one should exist)
-			let contact = await ContactModel.getContact();
+			const contactRef = admin.database().ref("contact");
+			const snapshot = await contactRef.once("value");
+			const contact = snapshot.val();
 
 			if (!contact) {
 				res.status(404).json({ message: "Contact not found!" });
@@ -35,17 +37,19 @@ export class ContactController {
 			}
 
 			// Update the contact with new details
-			contact.address = address;
-			contact.phone = phone;
-			contact.email = email;
-			contact.fax = fax;
+			const updatedContact = {
+				address: address || contact.address,
+				phone: phone || contact.phone,
+				email: email || contact.email,
+				fax: fax || contact.fax,
+			};
 
-			// Save the updated contact
-			await contact.save();
+			await contactRef.set(updatedContact);
 
-			res
-				.status(200)
-				.json({ message: "Contact updated successfully!", contact });
+			res.status(200).json({
+				message: "Contact updated successfully!",
+				contact: updatedContact,
+			});
 		} catch (error: any) {
 			console.error("Error updating contact:", error);
 			res
