@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
 import admin from "firebase-admin";
 import { sendNotification } from "../app";
+import nodemailer from "nodemailer";
+import { config } from "dotenv";
+config();
+
+interface User {
+	email: string;
+	matricNo: string;
+	name: string;
+	password: string;
+	role: string;
+	userId: string;
+}
 
 export class ComplaintController {
 	static async listComplaints(req: Request, res: Response): Promise<void> {
@@ -80,6 +92,7 @@ export class ComplaintController {
 				return;
 			}
 
+			const complaint = snapshot.val();
 			const updatedData = {
 				status,
 				comment,
@@ -88,27 +101,33 @@ export class ComplaintController {
 
 			await complaintRef.update(updatedData);
 
-			const complaint = { ...snapshot.val(), ...updatedData };
+			const updatedComplaint = { ...complaint, ...updatedData };
 
 			const notification = {
 				userId: complaint.submittedBy,
-				message: `Your complaint has been updated to \"${status}\".`,
+				message: `Your complaint "${complaint.title}" has been updated to "${status}" with a comment "${comment}"`,
 				type: "complaint_update",
 				data: { complaintId: id },
 				createdDate: new Date().toISOString(),
 			};
 
+			// Push the notification to Firebase
 			await admin.database().ref("notifications").push(notification);
 
+			// Send the push notification (assuming the sendNotification function is set up to send to the user)
 			sendNotification(complaint.submittedBy, {
 				message: notification.message,
 				type: notification.type,
 				data: notification.data,
 			});
 
-			res
-				.status(200)
-				.json({ message: "Complaint updated successfully!", complaint });
+			// Send the email notification to the student
+			await sendEmailNotification(complaint.matricNo, notification.message);
+
+			res.status(200).json({
+				message: "Complaint updated successfully!",
+				complaint: updatedComplaint,
+			});
 		} catch (error: any) {
 			console.error("Error updating complaint:", error);
 			res
@@ -171,5 +190,54 @@ export class ComplaintController {
 				.status(500)
 				.json({ message: "Internal server error", error: error.message });
 		}
+	}
+}
+
+async function sendEmailNotification(
+	matricNo: string,
+	message: string
+): Promise<void> {
+	try {
+		const transporter = nodemailer.createTransport({
+			service: "gmail",
+			auth: {
+				user: process.env.GMAIL_USER,
+				pass: process.env.GMAIL_PASSWORD,
+			},
+		});
+
+		const userSnapshot = await admin
+			.database()
+			.ref("users")
+			.orderByChild("matricNo")
+			.equalTo(matricNo)
+			.once("value");
+
+		if (!userSnapshot.exists()) {
+			console.error(`User with matricNo ${matricNo} not found.`);
+			return; // Or handle the error as needed
+		}
+
+		const users = userSnapshot.val() as Record<string, User>;
+		const user = Object.values(users)[0];
+		const email = user.email;
+
+		console.log(user);
+
+		if (!user || !email) {
+			console.error("User not found or email not available");
+			return;
+		}
+
+		await transporter.sendMail({
+			from: process.env.GMAIL_USER,
+			to: email,
+			subject: "Complaint Update",
+			text: message,
+		});
+
+		console.log(`Email sent to ${user.email}`);
+	} catch (error) {
+		console.error("Error sending email:", error);
 	}
 }
