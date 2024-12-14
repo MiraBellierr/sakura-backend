@@ -43,7 +43,7 @@ Sakura Backend is a system for managing complaints, feedback, FAQs, and contacts
    FIREBASE_DATABASE_URL=https://<your-realtime-database>.firebasedatabase.app
 `
 
-4. Make sure to download your firebase Admin SDK too, and paste it in the project root folder and rename it into `sakura-databse-firebase.json`
+4. Make sure to download your firebase Admin SDK too, and paste it in the project root folder and rename it into `sakura-database-firebase.json`
 
 ## 🚀 Running the Project
 
