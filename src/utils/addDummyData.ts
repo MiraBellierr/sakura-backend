@@ -4,7 +4,7 @@ import { config } from "dotenv";
 
 config();
 
-const serviceAccount = require("../../sakura-database-firebase-adminsdk-o092f-9c7ede27f8.json");
+const serviceAccount = require("../../sakura-database-firebase.json");
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({

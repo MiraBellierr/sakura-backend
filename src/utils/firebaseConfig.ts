@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const initializeFirebase = async () => {
-	const serviceAccount = require("../../sakura-database-firebase-adminsdk-o092f-9c7ede27f8.json");
+	const serviceAccount = require("../../sakura-database-firebase.json");
 
 	if (!admin.apps.length) {
 		admin.initializeApp({
