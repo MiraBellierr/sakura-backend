@@ -19,7 +19,6 @@ Sakura Backend is a system for managing complaints, feedback, FAQs, and contacts
 ### Prerequisites
 
 - **Node.js** (version 14+ recommended)
-- **MongoDB** (local or hosted instance)
 - **Git**
 
 ### Steps to Install
@@ -40,10 +39,11 @@ Sakura Backend is a system for managing complaints, feedback, FAQs, and contacts
 3. Configure the environment:
    Create a `.env` file in the project root and add the following:
    `env
-PORT=3000
-MONGO_URI=mongodb://localhost:27017/sakura
-JWT_SECRET=your_secret_key
+   PORT=3000
+   FIREBASE_DATABASE_URL=https://<your-realtime-database>.firebasedatabase.app
 `
+
+4. Make sure to download your firebase Admin SDK too, and paste it in the project root folder and rename it into `sakura-databse-firebase.json`
 
 ## 🚀 Running the Project
 
@@ -90,5 +90,5 @@ We welcome contributions to Sakura Backend! If you'd like to help:
 
 - **[Node.js](https://nodejs.org/)**: JavaScript runtime
 - **[TypeScript](https://www.typescriptlang.org/)**: Static type-checking
-- **[MongoDB](https://www.mongodb.com/)**: Database
+- **[Firebase](https://firebase.google.com/)**: Database
 - **[Express.js](https://expressjs.com/)**: Web framework
