@@ -25,7 +25,7 @@ export class ContactController {
 	// Update the existing contact (only one contact in DB)
 	static async updateContact(req: Request, res: Response): Promise<void> {
 		try {
-			const { address, phone, email, fax, emergency } = req.body;
+			const { address, phone, fax, emergency } = req.body;
 
 			const contactRef = admin.database().ref("contact");
 			const snapshot = await contactRef.once("value");
@@ -40,7 +40,6 @@ export class ContactController {
 			const updatedContact = {
 				address: address || contact.address,
 				phone: phone || contact.phone,
-				email: email || contact.email,
 				fax: fax || contact.fax,
 				emergency: emergency || contact.emergency,
 			};
