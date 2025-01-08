@@ -22,6 +22,7 @@ export class FeedbackController {
 				rating,
 				comments,
 				submittedBy,
+				reply: null, // New field for reply
 				createdDate: new Date().toISOString(),
 				updatedDate: new Date().toISOString(),
 			};
@@ -47,6 +48,32 @@ export class FeedbackController {
 			res.status(200).json(feedbacks);
 		} catch (error: any) {
 			console.error("Error fetching feedbacks:", error);
+			res
+				.status(500)
+				.json({ message: "Internal server error", error: error.message });
+		}
+	}
+
+	static async replyFeedback(req: Request, res: Response): Promise<void> {
+		try {
+			const { feedbackId, reply } = req.body;
+
+			const feedbackRef = admin.database().ref(`feedbacks/${feedbackId}`);
+			const feedbackSnapshot = await feedbackRef.once("value");
+
+			if (!feedbackSnapshot.exists()) {
+				res.status(404).json({ message: "Feedback not found" });
+				return;
+			}
+
+			await feedbackRef.update({
+				reply,
+				updatedDate: new Date().toISOString(),
+			});
+
+			res.status(200).json({ message: "Reply added successfully!" });
+		} catch (error: any) {
+			console.error("Error replying to feedback:", error);
 			res
 				.status(500)
 				.json({ message: "Internal server error", error: error.message });
