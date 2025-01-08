@@ -49,7 +49,7 @@ export class ComplaintController {
 
             const userSnapshot = await admin
                 .database()
-                .ref(`users`)
+                .ref("users")
                 .orderByChild("userId")
                 .equalTo(submittedBy)
                 .once("value");
@@ -59,8 +59,14 @@ export class ComplaintController {
                 return;
             }
 
-            const user = userSnapshot.val() as User;
+            const users = userSnapshot.val() as Record<string, User>;
+            const user = Object.values(users)[0];
             const { name, matricNo } = user;
+
+            if (!name || !matricNo) {
+                res.status(500).json({ message: "User data is incomplete!" });
+                return;
+            }
 
             const newComplaintRef = admin.database().ref("complaints").push();
             const complaint = {
@@ -233,11 +239,11 @@ async function sendEmailNotification(
 
         const users = userSnapshot.val() as Record<string, User>;
         const user = Object.values(users)[0];
-		const email = user.email;
+        const email = user.email;
 
 		console.log(user);
 
-        if (!user || !email) {
+		if (!user || !email) {
             console.error("User not found or email not available");
             return;
         }
