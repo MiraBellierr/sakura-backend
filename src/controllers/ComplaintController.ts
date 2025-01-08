@@ -49,7 +49,9 @@ export class ComplaintController {
 
             const userSnapshot = await admin
                 .database()
-                .ref(`users/${submittedBy}`)
+                .ref(`users`)
+                .orderByChild("userId")
+                .equalTo(submittedBy)
                 .once("value");
 
             if (!userSnapshot.exists()) {
