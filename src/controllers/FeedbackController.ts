@@ -68,6 +68,26 @@ export class FeedbackController {
         }
     }
 
+    static async getFeedbackById(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const feedbackRef = admin.database().ref(`feedbacks/${id}`);
+            const feedbackSnapshot = await feedbackRef.once("value");
+
+            if (!feedbackSnapshot.exists()) {
+                res.status(404).json({ message: "Feedback not found" });
+                return;
+            }
+
+            res.status(200).json(feedbackSnapshot.val());
+        } catch (error: any) {
+            console.error("Error fetching feedback:", error);
+            res
+                .status(500)
+                .json({ message: "Internal server error", error: error.message });
+        }
+    }
+
     static async replyFeedback(req: Request, res: Response): Promise<void> {
         try {
             const { feedbackId, reply } = req.body;
