@@ -38,6 +38,7 @@ export class FeedbackController {
                 type: "FeedbackSubmit",
                 data: { feedbackId: newFeedbackRef.key },
                 createdDate: new Date().toISOString(),
+                id: ""
             });
 
             // Send email notification
@@ -112,6 +113,7 @@ export class FeedbackController {
                 type: "FeedbackReply",
                 data: { feedbackId },
                 createdDate: new Date().toISOString(),
+                id: ""
             });
 
             // Send email notification

@@ -95,6 +95,7 @@ export class ComplaintController {
                 type: "ComplaintSubmit",
                 data: { complaintId: newComplaintRef.key },
                 createdDate: new Date().toISOString(),
+                id: ""
             });
 
             // Send email notification
@@ -142,6 +143,7 @@ export class ComplaintController {
                 type: "ComplaintUpdate",
                 data: { complaintId: id },
                 createdDate: new Date().toISOString(),
+                id: ""
             });
 
             // Send email notification
