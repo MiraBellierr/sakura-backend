@@ -1,6 +1,16 @@
 import { Request, Response } from "express";
 import admin from "firebase-admin";
 
+type NotificationType = "ComplaintSubmit" | "ComplaintUpdate" | "FeedbackSubmit" | "FeedbackReply";
+
+interface Notification {
+    userId: string;
+    message: string;
+    type: NotificationType;
+    data: any;
+    createdDate: string;
+}
+
 export class NotificationController {
 	// Fetch all notifications for a specific user
 	static async getNotifications(req: Request, res: Response): Promise<void> {
@@ -171,4 +181,12 @@ export class NotificationController {
 				.json({ message: "Internal server error", error: error.message });
 		}
 	}
+
+    static async createNotification(notification: Notification): Promise<void> {
+        try {
+            await admin.database().ref("notifications").push(notification);
+        } catch (error: any) {
+            console.error("Error creating notification:", error);
+        }
+    }
 }

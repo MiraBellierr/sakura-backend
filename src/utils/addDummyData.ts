@@ -16,12 +16,52 @@ admin.initializeApp({
 const dummyData = {
 	students: [
 		{
-			userId: "12345",
-			password: "student1234", // Plain password, will be hashed
+			userId: "82430",
+			password: "anis1234", // Plain password, will be hashed
 			role: "student",
-			name: "John Doe",
-			matricNo: "12345",
-			email: "john.doe@student.com",
+			name: "Anis Sofea Binti Zahamdan",
+			matricNo: "82430",
+			email: "82430@siswa.unimas.my",
+		},
+		{
+			userId: "75848",
+			password: "danial1234", // Plain password, will be hashed
+			role: "student",
+			name: "Muhammad Danial Bin Zamri",
+			matricNo: "75848",
+			email: "75848@siswa.unimas.my",
+		},
+		{
+			userId: "84701",
+			password: "hazim1234", // Plain password, will be hashed
+			role: "student",
+			name: "Muhammad Hazim Bin Rohani",
+			matricNo: "84701",
+			email: "84701@siswa.unimas.my",
+		},
+		{
+			userId: "82905",
+			password: "sha1234", // Plain password, will be hashed
+			role: "student",
+			name: "Phlyzesha Phua",
+			matricNo: "82905",
+			email: "82905@siswa.unimas.my",
+		},
+		{
+			userId: "82925",
+			password: "ros1234", // Plain password, will be hashed
+			role: "student",
+			name: "Rosita Anak Uja",
+			matricNo: "82925",
+			email: "82925@siswa.unimas.my",
+		},
+		{
+			userId: "82938",
+			password: "azleen1234", // Plain password, will be hashed
+			role: "student",
+			name: "Sharifah Azleen Aleesya Binti Wan Awat",
+			matricNo: "82938",
+			email: "82938@siswa.unimas.my",
 		},
 	],
 	admins: [
@@ -29,44 +69,48 @@ const dummyData = {
 			userId: "admin1",
 			password: "admin1234", // Plain password, will be hashed
 			role: "admin",
-			name: "Admin User",
-			email: "admin@example.com",
-		},
-	],
+			name: "admin1",
+			matricNo: "admin1",
+			email: "admin1@unimas.my",
+		}
+	]
 };
 
 // Function to hash the password and add dummy data to Firebase
 const addDummyDataToFirebase = async () => {
-	try {
-		const usersRef = admin.database().ref("users");
+    try {
+        const usersRef = admin.database().ref("users");
 
-		// Add student data to Firebase
-		const student = dummyData.students[0];
-		const hashedStudentPassword = await bcrypt.hash(student.password, 10); // Hash the password
-		await usersRef.push({
-			userId: student.userId,
-			password: hashedStudentPassword,
-			role: student.role,
-			name: student.name,
-			matricNo: student.matricNo,
-			email: student.email,
-		});
+        // Add student data to Firebase
+        for (const student of dummyData.students) {
+            const hashedPassword = await bcrypt.hash(student.password, 10); // Hash the password
+            await usersRef.push({
+                userId: student.userId,
+                password: hashedPassword,
+                role: student.role,
+                name: student.name,
+                matricNo: student.matricNo,
+                email: student.email,
+            });
+        }
 
-		// Add admin data to Firebase
-		const adminData = dummyData.admins[0];
-		const hashedAdminPassword = await bcrypt.hash(adminData.password, 10); // Hash the password
-		await usersRef.push({
-			userId: adminData.userId,
-			password: hashedAdminPassword,
-			role: adminData.role,
-			name: adminData.name,
-			email: adminData.email,
-		});
+        // Add admin data to Firebase
+        for (const adminData of dummyData.admins) {
+            const hashedPassword = await bcrypt.hash(adminData.password, 10); // Hash the password
+            await usersRef.push({
+                userId: adminData.userId,
+                password: hashedPassword,
+                role: adminData.role,
+                name: adminData.name,
+                matricNo: adminData.matricNo,
+                email: adminData.email,
+            });
+        }
 
-		console.log("Dummy student and admin data added successfully!");
-	} catch (error) {
-		console.error("Error adding dummy data to Firebase:", error);
-	}
+        console.log("Dummy student and admin data added successfully!");
+    } catch (error) {
+        console.error("Error adding dummy data to Firebase:", error);
+    }
 };
 
 // Run the function to add the dummy data

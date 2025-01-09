@@ -3,6 +3,7 @@ import admin from "firebase-admin";
 import { sendNotification } from "../app";
 import nodemailer from "nodemailer";
 import { config } from "dotenv";
+import { NotificationController } from "./NotificationController";
 config();
 
 interface User {
@@ -87,6 +88,18 @@ export class ComplaintController {
 
             await newComplaintRef.set(complaint);
 
+            // Create notification for ComplaintSubmit
+            await NotificationController.createNotification({
+                userId: submittedBy,
+                message: "Your complaint has been submitted.",
+                type: "ComplaintSubmit",
+                data: { complaintId: newComplaintRef.key },
+                createdDate: new Date().toISOString(),
+            });
+
+            // Send email notification
+            await sendEmailNotification(matricNo, "Your complaint has been submitted.");
+
             res
                 .status(201)
                 .json({ message: "Complaint created successfully!", complaint });
@@ -122,26 +135,17 @@ export class ComplaintController {
 
             const updatedComplaint = { ...complaint, ...updatedData };
 
-            const notification = {
+            // Create notification for ComplaintUpdate
+            await NotificationController.createNotification({
                 userId: complaint.submittedBy,
                 message: `Your complaint has been updated to "${status}" with a comment "${comment}"`,
-                type: "complaint_update",
+                type: "ComplaintUpdate",
                 data: { complaintId: id },
                 createdDate: new Date().toISOString(),
-            };
-
-            // Push the notification to Firebase
-            await admin.database().ref("notifications").push(notification);
-
-            // Send the push notification (assuming the sendNotification function is set up to send to the user)
-            sendNotification(complaint.submittedBy, {
-                message: notification.message,
-                type: notification.type,
-                data: notification.data,
             });
 
-            // Send the email notification to the student
-            await sendEmailNotification(complaint.matricNo, notification.message);
+            // Send email notification
+            await sendEmailNotification(complaint.matricNo, `Your complaint has been updated to "${status}" with a comment "${comment}"`);
 
             res.status(200).json({
                 message: "Complaint updated successfully!",
@@ -212,7 +216,7 @@ export class ComplaintController {
     }
 }
 
-async function sendEmailNotification(
+export async function sendEmailNotification(
     matricNo: string,
     message: string
 ): Promise<void> {
